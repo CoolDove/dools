@@ -1,25 +1,18 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System;
 using System.Reflection;
-using UnityEngine;
 
-[System.AttributeUsage(AttributeTargets.All)]
-public class CollectedAttribAttribute : Attribute {}
-
-public class AttributeHelper : MonoBehaviour
+namespace dove.reflection
 {
-    private void Start() {
-        AttributeHelper.GetTypes<CollectedAttribAttribute>();
-    }
-
-    public static List<Type> GetTypes<T>() where T : Attribute {
+public class AttributeHelper : Attribute
+{
+    public static List<Type> GetTypesByAttribute<T>() where T : Attribute {
         return GetTypesByAttribute(typeof(T));
     }
-
     private static List<Type> GetTypesByAttribute(Type _attrib_type) {
         var output = new List<Type>();
-        var assembly = Type.GetType("AttributeHelper").Assembly;
+        var assembly = typeof(AttributeHelper).Assembly;
         var types = assembly.GetTypes();
         foreach (var t in types) {
             var attribs = t.GetCustomAttributes();
@@ -32,4 +25,6 @@ public class AttributeHelper : MonoBehaviour
         }
         return output;
     }
+}
+
 }
