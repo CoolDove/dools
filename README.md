@@ -1,2 +1,2 @@
 # dools
-toolkit for game making
+toolkit for game making with Unity
