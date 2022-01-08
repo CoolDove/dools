@@ -16,15 +16,17 @@ public class GameSystemAttribute : Attribute
     }
 }
 
+[System.AttributeUsage(System.AttributeTargets.Property, AllowMultiple=false, Inherited=true)]
+public class GameSystemInjectAttribute : Attribute
+{
+    public GameSystemInjectAttribute() {
+    }
+}
+
 public interface IGameSystem
 {
     public GameMain Game { get; }
     void OnInit();
     void OnRelease();
 }
-// 
-// public interface IGameSystemUpdate
-// {
-    // void Update();
-// }
 }

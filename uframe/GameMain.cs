@@ -88,6 +88,16 @@ public class GameMain : Singleton<GameMain> {
                 // Inject dependencies
                 var game_propt = sys.type.GetProperty("Game");
                 game_propt?.SetValue(sys.system, GameMain.Instance);
+
+                var properties = sys.type.GetProperties();
+                foreach (var p in properties) {
+                    var atb = p.GetCustomAttributes(typeof(GameSystemInjectAttribute), false);
+                    if (atb.Length > 0) {
+                        p.SetValue(sys.system, GetIGameSystem(sys.type));
+                        Debug.Log($"inject [{GetIGameSystem(sys.type)}] into [{p}]");
+                    }
+                    Debug.Log(p);
+                }
             }
         }
     }
