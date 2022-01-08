@@ -12,13 +12,15 @@ public class GameMain : Singleton<GameMain> {
 
     private struct GSys {
         public Type type;
-        public IGameSystem system;
         public int order;
+        public IGameSystem system;
+        public SystemUpdateDelegate update;
     }
     private List<GSys> systems_ = new List<GSys>();
+    private delegate void SystemUpdateDelegate();
 
-    public T GetSystem<T>() where T : class, IGameSystem {
-        return GetIGameSystem(typeof(T)) as T;
+    public static T GetSystem<T>() where T : class, IGameSystem {
+        return Instance.GetIGameSystem(typeof(T)) as T;
     }
 
     public IGameSystem GetIGameSystem(Type _type) {
@@ -36,17 +38,34 @@ public class GameMain : Singleton<GameMain> {
         
         var systypes = reflection.AttributeHelper.GetTypesByAttribute<dove.GameSystemAttribute>();
         foreach (var t in systypes) {
-            if (t.GetInterface("IGameSystem") == null) {
+            if (t.IsAssignableFrom(typeof(IGameSystem))) {
                 Debug.Log($"type: {t}, didnt implement interface [IGameSystem], cannot use [GameSystem] attribute.");
                 continue;
             }
-            var constructor_info = t.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, CallingConventions.Any, new Type[0], null);
-            if (constructor_info == null) Debug.Log($"no private constructor find in GameSystem class: {t}");
+
+            // search all constructors for the one with no input args
+            var constructor_info = t.GetConstructor(
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance,
+                null, CallingConventions.Any, new Type[0], null);
+            if (constructor_info == null) {
+                Debug.Log($"No private constructor find in GameSystem class: {t}");
+            }
             else {
                 var sys = (IGameSystem)constructor_info.Invoke(new object[0]);    
                 if (sys != null) {
-                    Debug.Log($"GameSystem: [{t}] loaded.");
-                    systems_.Add(new GSys(){ type = t, system = sys, order = GetOrder(t) });
+                    GSys gsys = new GSys() {
+                        type = t,
+                        system = sys,
+                        order = GetOrder(t) };
+
+                    var update_method = t.GetMethod(
+                        "Update",
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                        null, CallingConventions.Any, new Type[0], null);
+                    if (update_method != null)
+                        gsys.update = (SystemUpdateDelegate)update_method.CreateDelegate(typeof(SystemUpdateDelegate), sys);
+                    
+                    systems_.Add(gsys);
                 }
             }
         }
@@ -65,7 +84,17 @@ public class GameMain : Singleton<GameMain> {
             foreach (var sys in systems_) {
                 Debug.Log($"-{sys.type} (order: {sys.order})");
                 sys.system.OnInit();
+
+                // Inject dependencies
+                var game_propt = sys.type.GetProperty("Game");
+                game_propt?.SetValue(sys.system, GameMain.Instance);
             }
+        }
+    }
+
+    public void UpdateGame() {
+        foreach (var s in systems_) {
+            s.update?.Invoke();
         }
     }
 

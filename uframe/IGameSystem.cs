@@ -22,9 +22,9 @@ public interface IGameSystem
     void OnInit();
     void OnRelease();
 }
-
-public interface IGameSystemUpdate
-{
-    void Update(float _delta);
-}
+// 
+// public interface IGameSystemUpdate
+// {
+    // void Update();
+// }
 }

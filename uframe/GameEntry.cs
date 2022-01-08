@@ -16,6 +16,10 @@ public class GameEntry : MonoBehaviour
         game.InitGame();
     }
 
+    private void Update() {
+        game.UpdateGame();
+    }
+
     private void OnDestroy() {
         game.ReleaseGame();
     }
