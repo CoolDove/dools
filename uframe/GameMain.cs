@@ -83,7 +83,6 @@ public class GameMain : Singleton<GameMain> {
             Debug.Log("= Loaded Systems: ");
             foreach (var sys in systems_) {
                 Debug.Log($"-{sys.type} (order: {sys.order})");
-                sys.system.OnInit();
 
                 // Inject dependencies
                 var game_propt = sys.type.GetProperty("Game");
@@ -96,8 +95,10 @@ public class GameMain : Singleton<GameMain> {
                         p.SetValue(sys.system, GetIGameSystem(sys.type));
                         Debug.Log($"inject [{GetIGameSystem(sys.type)}] into [{p}]");
                     }
-                    Debug.Log(p);
                 }
+            }
+            foreach (var sys in systems_) {
+                sys.system.OnInit();
             }
         }
     }
