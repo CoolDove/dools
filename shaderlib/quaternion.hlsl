@@ -51,7 +51,7 @@ float4 quat_vectovec(float3 va, float3 vb) {
 // TODO: confirm this
 float4 quat_slerp(float4 qa, float4 qb, float interp) {
 	float theta = acos(dot(qa, qb));
-	return (sin(theta - interp) / sin(theta)) * qa + (sin(theta * t) / sin(theta)) * qb;
+	return (sin(theta - interp) / sin(theta)) * qa + (sin(theta * interp) / sin(theta)) * qb;
 }
 
 // FIXME:
