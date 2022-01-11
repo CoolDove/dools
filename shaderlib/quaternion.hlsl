@@ -24,7 +24,7 @@ float4 quat_conjugate(float4 q) {
 	return float4(-q.x, -q.y, -q.z, q.w);
 }
 
-float4 quat_neg(float4 q) {
+float4 quat_inverse(float4 q) {
 	float nmag = 1.0 / quat_mag(q);
 	return quat_conjugate(q) * nmag;
 }
@@ -32,10 +32,10 @@ float4 quat_neg(float4 q) {
 // -----------------
 
 float3 quat_apply(float3 v, float4 q) {
-	return quat_mul(quat_mul(q, v), quat_neg(q));
+	return quat_mul(quat_mul(q, v), quat_inverse(q));
 }
 
-float4 quat_axisangle(float3 _axis, float _radian) {
+float4 quat_axisrad(float3 _axis, float _radian) {
     float t = sin(_radian * 0.5);
     return float4(_axis.x * t, _axis.y * t, _axis.z * t, cos(_radian * 0.5));
 }
@@ -45,7 +45,7 @@ float4 quat_vectovec(float3 va, float3 vb) {
 	float3 nb = normalize(vb);
 	float3 axis = cross(na, nb);
 	float radian = acos(dot(na, nb));
-	return normalize(quat_axisangle(axis, radian));
+	return normalize(quat_axisrad(axis, radian));
 }
 
 // TODO: confirm this
