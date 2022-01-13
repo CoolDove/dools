@@ -5,7 +5,7 @@
 float4 quat_mul(float4 _qa, float4 _qb) {
 	float3 va = _qa.xyz;
 	float3 vb = _qb.xyz;
-	float scalar = _qa.w * _qb.w - dot(_qa, _qb);
+	float scalar = _qa.w * _qb.w - dot(va, vb);
 	float3 vec = _qa.w * vb + _qb.w * va + cross(va, vb);
 	return float4(vec, scalar);
 }
@@ -17,7 +17,7 @@ float4 quat_mul(float3 _qa, float4 _qb) {
 }
 
 float quat_mag(float4 _q) {
-	return sqrt(_q.x * _q.x + _q.y * _q.y + _q.z * _q.z + _q.w * _q.w);
+	return dot(_q, _q);
 }
 
 float4 quat_conjugate(float4 q) {
@@ -61,7 +61,7 @@ float4 quat_lookat(float3 _fwd, float3 _up) {
 	float3 rotatedup = quat_apply(_up, qa);
 	float4 qb = quat_vectovec(rotatedup, targetup);
 
-    return normalize(quat_mul(qb, qa));
+    return quat_mul(qb, qa);
 }
 
 #endif
