@@ -16,6 +16,10 @@ float4 quat_mul(float3 _qa, float4 _qb) {
 	return quat_mul(float4(_qa, 0), _qb);
 }
 
+float4 quat_identity() {
+    return float4(0, 0, 0, 1);
+}
+
 float quat_mag(float4 _q) {
 	return dot(_q, _q);
 }
@@ -56,11 +60,14 @@ float4 quat_slerp(float4 qa, float4 qb, float interp) {
 
 // FIXME:
 float4 quat_lookat(float3 _fwd, float3 _up) {
-	float3 targetup = cross(-cross(_up, _fwd), _fwd);
-	float4 qa = quat_vectovec(float3(0, 0, 1), _fwd);
-	float3 rotatedup = quat_apply(_up, qa);
-	float4 qb = quat_vectovec(rotatedup, targetup);
+	float3 tright = cross(_up, _fwd);
+	float3 tup = cross(tright, _fwd);
 
+	float4 qa = quat_vectovec(float3(0, 0, 1), _fwd);
+	float3 rotatedup = quat_apply(float3(0, 1, 0), qa);
+	float4 qb = quat_vectovec(rotatedup, tup);
+
+    return qa;
     return quat_mul(qb, qa);
 }
 
