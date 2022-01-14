@@ -39,9 +39,13 @@ float3 quat_apply(float3 v, float4 q) {
 	return quat_mul(quat_mul(q, v), quat_inverse(q));
 }
 
-float4 quat_axisrad(float3 _axis, float _radian) {
+float4 quat_from_axisrad(float3 _axis, float _radian) {
     float t = sin(_radian * 0.5);
     return float4(_axis.x * t, _axis.y * t, _axis.z * t, cos(_radian * 0.5));
+}
+float4 quat_from_euler(float3 euler) {
+	// TODO: ...
+    return quat_identity();
 }
 
 float4 quat_vectovec(float3 va, float3 vb) {
@@ -49,13 +53,12 @@ float4 quat_vectovec(float3 va, float3 vb) {
 	float3 nb = normalize(vb);
 	float3 axis = cross(na, nb);
 	float radian = acos(dot(na, nb));
-	return normalize(quat_axisrad(axis, radian));
+	return normalize(quat_from_axisrad(axis, radian));
 }
 
-// TODO: confirm this
 float4 quat_slerp(float4 qa, float4 qb, float interp) {
 	float theta = acos(dot(qa, qb));
-	return (sin(theta - interp) / sin(theta)) * qa + (sin(theta * interp) / sin(theta)) * qb;
+	return (sin(theta * (1 - interp)) / sin(theta)) * qa + (sin(theta * interp) / sin(theta)) * qb;
 }
 
 // FIXME:
@@ -67,7 +70,6 @@ float4 quat_lookat(float3 _fwd, float3 _up) {
 	float3 rotatedup = quat_apply(float3(0, 1, 0), qa);
 	float4 qb = quat_vectovec(rotatedup, tup);
 
-    return qa;
     return quat_mul(qb, qa);
 }
 
