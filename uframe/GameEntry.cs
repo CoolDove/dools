@@ -20,8 +20,14 @@ public class GameEntry : MonoBehaviour
         game.UpdateGame();
     }
 
+    private void OnDrawGizmos() {
+        game.DrawGizmos();
+    }
+    
     private void OnDestroy() {
         game.ReleaseGame();
     }
+
+
 }
 }

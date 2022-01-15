@@ -14,10 +14,11 @@ public class GameMain : Singleton<GameMain> {
         public Type type;
         public int order;
         public IGameSystem system;
-        public SystemUpdateDelegate update;
+        public UnityMonoDelegate update;
+        public UnityMonoDelegate on_draw_gizmos;
     }
     private List<GSys> systems_ = new List<GSys>();
-    private delegate void SystemUpdateDelegate();
+    private delegate void UnityMonoDelegate();
 
     public static T GetSystem<T>() where T : class, IGameSystem {
         return Instance.GetIGameSystem(typeof(T)) as T;
@@ -58,12 +59,16 @@ public class GameMain : Singleton<GameMain> {
                         system = sys,
                         order = GetOrder(t) };
 
-                    var update_method = t.GetMethod(
-                        "Update",
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-                        null, CallingConventions.Any, new Type[0], null);
+                    BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+                    var update_method = t.GetMethod("Update",
+                        flags, null, CallingConventions.Any, new Type[0], null);
                     if (update_method != null)
-                        gsys.update = (SystemUpdateDelegate)update_method.CreateDelegate(typeof(SystemUpdateDelegate), sys);
+                        gsys.update = (UnityMonoDelegate)update_method.CreateDelegate(typeof(UnityMonoDelegate), sys);
+
+                    var on_draw_gizmos_method = t.GetMethod("OnDrawGizmos",
+                        flags, null, CallingConventions.Any, new Type[0], null);
+                    if (on_draw_gizmos_method != null)
+                        gsys.on_draw_gizmos = (UnityMonoDelegate)on_draw_gizmos_method.CreateDelegate(typeof(UnityMonoDelegate), sys);
                     
                     systems_.Add(gsys);
                 }
@@ -107,6 +112,11 @@ public class GameMain : Singleton<GameMain> {
         foreach (var s in systems_) {
             s.update?.Invoke();
         }
+    }
+
+    public void DrawGizmos() {
+        foreach (var s in systems_)
+            s.on_draw_gizmos?.Invoke();
     }
 
     public void ReleaseGame() {

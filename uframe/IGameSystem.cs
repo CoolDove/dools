@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 using System.Reflection;
+using UnityEngine;
 
 namespace dove
 {
@@ -29,4 +30,12 @@ public interface IGameSystem
     void OnInit();
     void OnRelease();
 }
+
+// TODO:
+public interface IConfigurableGameSystem<T> where T : ScriptableObject
+{
+    public T config { get; set; }
 }
+
+}
+
