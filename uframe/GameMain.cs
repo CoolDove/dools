@@ -44,7 +44,7 @@ public class GameMain : Singleton<GameMain> {
                 continue;
             }
 
-            // search all constructors for the one with no input args
+            // search constructors
             var constructor_info = t.GetConstructor(
                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance,
                 null, CallingConventions.Any, new Type[0], null);
