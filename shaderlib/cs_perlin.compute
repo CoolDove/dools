@@ -1,0 +1,58 @@
+#pragma kernel cs_perlin
+
+#include "hash.inc.hlsl"
+
+RWTexture2D<float4> _Dest;
+
+float _Size;
+float _Unit;
+float2 _Offset;
+
+float2 grad(int2 pos) {
+    // No precomputed gradients mean this works for any number of grid coordinates
+    uint w = 8 * 4;
+    uint s = w / 2; // rotation width
+    uint a = pos.x, b = pos.y;
+    a *= 3284157443; b ^= a << s | a >> w-s;
+    b *= 1911520717; a ^= b << s | b >> w-s;
+    a *= 2048419325;
+    float random = a * (3.14159265 / ~(~0u >> 1)); // in [0, 2*Pi]
+    float2 v;
+    v.x = sin(random); v.y = cos(random);
+    return v;
+}
+
+float fade(float t) {
+    return 6 * pow(t, 5) - 15 * pow(t, 4) + 10 * pow(t, 3);
+}
+
+[numthreads(8, 8, 1)]
+void cs_perlin(uint2 id : SV_DispatchThreadID) {
+	float scale = 1.0 / _Unit;
+	float2 sid = id * scale + _Offset;
+
+	float2 hash = grad(float2(floor(id * scale) / (_Size / _Unit)));
+
+    float2 pa = floor(sid);
+	float2 pb = pa + float2(1, 0);
+	float2 pc = pa + float2(0, 1);
+	float2 pd = pa + float2(1, 1);
+
+	float2 ga = grad((int2)pa);
+	float2 gb = grad((int2)pb);
+	float2 gc = grad((int2)pc);
+	float2 gd = grad((int2)pd);
+
+	float2 p = frac(sid); // sample point coord in unit
+	float sa = dot(sid - pa, ga);
+	float sb = dot(sid - pb, gb);
+	float sc = dot(sid - pc, gc);
+	float sd = dot(sid - pd, gd);
+
+    float lab = lerp(sa, sb, fade(p.x));
+    float lcd = lerp(sc, sd, fade(p.x));
+	float ll = lerp(lab, lcd, fade(p.y));
+	
+	float n = (ll + 1) * 0.5;
+    _Dest[id] = float4(n, 0.0, 0.0, 1.0);
+}
