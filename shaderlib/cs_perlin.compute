@@ -9,7 +9,6 @@ float _Unit;
 float2 _Offset;
 
 float2 grad(int2 pos) {
-    // No precomputed gradients mean this works for any number of grid coordinates
     uint w = 8 * 4;
     uint s = w / 2; // rotation width
     uint a = pos.x, b = pos.y;
