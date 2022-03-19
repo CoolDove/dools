@@ -26,7 +26,7 @@ public class GameSystemInjectAttribute : Attribute
 
 public interface IGameSystem
 {
-    public GameMain Game { get; }
+    public GameMain Game { get; set; }
     void OnInit();
     void OnRelease();
 }
@@ -38,4 +38,3 @@ public interface IConfigurableGameSystem<T> where T : ScriptableObject
 }
 
 }
-
