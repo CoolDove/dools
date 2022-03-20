@@ -97,7 +97,7 @@ public class GameMain : Singleton<GameMain> {
                 foreach (var p in properties) {
                     var atb = p.GetCustomAttributes(typeof(GameSystemInjectAttribute), false);
                     if (atb.Length > 0) {
-                        p.SetValue(sys.system, GetIGameSystem(sys.type));
+                        p.SetValue(sys.system, GetIGameSystem(p.PropertyType));
                         Debug.Log($"inject [{GetIGameSystem(sys.type)}] into [{p}]");
                     }
                 }
