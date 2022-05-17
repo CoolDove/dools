@@ -20,6 +20,13 @@ public class GameMain : Singleton<GameMain> {
     private List<GSys> systems_ = new List<GSys>();
     private delegate void UnityMonoDelegate();
 
+
+    private Dictionary<CallbackType, Action> callbacks = new Dictionary<CallbackType, Action>();
+    public enum CallbackType { 
+        BeforeSystemInit,
+        AllSystemInited,
+    }
+
     public static T GetSystem<T>() where T : class, IGameSystem {
         return Instance.GetIGameSystem(typeof(T)) as T;
     }
@@ -28,6 +35,20 @@ public class GameMain : Singleton<GameMain> {
         foreach (var s in systems_)
             if (s.type == _type) return s.system;
         return null;
+    }
+
+    public void RegCallback(CallbackType type, Action action) {
+        if (callbacks.ContainsKey(type))
+        {
+            callbacks[type] += action;
+        }
+        else {
+            callbacks.Add(type, action);
+        }
+    }
+    public void UnregCallback(CallbackType type, Action action) {
+        if (!callbacks.ContainsKey(type)) return;
+        callbacks[type] -= action;
     }
 
     public void InitGame() {
@@ -102,9 +123,14 @@ public class GameMain : Singleton<GameMain> {
                     }
                 }
             }
+            // Init Systems
+            if (callbacks.ContainsKey(CallbackType.BeforeSystemInit)) 
+                callbacks[CallbackType.BeforeSystemInit]?.Invoke();
             foreach (var sys in systems_) {
                 sys.system.OnInit();
             }
+            if (callbacks.ContainsKey(CallbackType.AllSystemInited)) 
+                callbacks[CallbackType.AllSystemInited]?.Invoke();
         }
     }
 
@@ -120,9 +146,10 @@ public class GameMain : Singleton<GameMain> {
     }
 
     public void ReleaseGame() {
-        systems_.ForEach(s => {
-            s.system.OnRelease();
-        });
+        if (systems_.Count <= 0) return;
+        for (int i = systems_.Count - 1; i > -1; i--) { 
+            systems_[i].system.OnRelease();
+        }
     }
 }
 }
