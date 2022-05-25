@@ -26,7 +26,9 @@ class DDialogueParser<NodeType> where NodeType : System.Enum
         public Token(TokenType type)
         {
             this.type = type;
-            this.value = "";
+            {
+                this.value = "";
+            }
         }
         public Token(TokenType type, string value) {
             this.type = type;
@@ -65,6 +67,13 @@ class DDialogueParser<NodeType> where NodeType : System.Enum
         tokenStackUsing.Push(tok);
         return tok;
     }
+
+    private void StackRecover() {
+        while (tokenStackUsing.Count != 0) {
+            tokenStackRecover.Push(tokenStackUsing.Pop());
+        }
+    }
+    
     private Token getNextToken() {
         if (tokenStackRecover.Count != 0) return tokenStackRecover.Pop();
 
@@ -81,7 +90,7 @@ class DDialogueParser<NodeType> where NodeType : System.Enum
         }
         if (current == ')') {
             pos++;
-            return new Token(TokenType.LParen);
+            return new Token(TokenType.RParen);
         }
         if (current == '[') {
             pos++;
@@ -134,23 +143,111 @@ class DDialogueParser<NodeType> where NodeType : System.Enum
     }
 
     public DDialogNode<NodeType> Parse() {
-        // var root = ParseNode();
-        // DDialogNode<NodeType> root = new DDialogNode<NodeType>();
-        // return root;
-        Token tok = new Token(TokenType.None);
-        while (tok.type != TokenType.End) {
-            tok = NextToken();
-        }
+        // Token tok = new Token(TokenType.None);
+        // while (tok.type != TokenType.End) {
+            // tok = NextToken();
+        // }
+        var prop = ParseProperty();
+        
         return null;
     }
 
     // recover token stack if failed
-    // private DDialogNode<NodeType> ParseNode() {
-    // }
-    // private DDialogCondition ParseCondition() {
-    // }
-    // private DDialogNodeProperty ParseProperty() {
-    // }
+    private DDialogNode<NodeType> ParseNode() {
+        return null;
+    }
+    private DDialogCondition ParseCondition() {
+        Token tok = NextToken();
+
+        string typeStr = "";
+        DDConditionType type = DDConditionType.None;
+        string content = "";
+        if (tok.type == TokenType.LAngleBracket) {
+            tok = NextToken();
+            if (tok.type == TokenType.String) {
+                typeStr = tok.value;
+                try {
+                    type = (DDConditionType)System.Enum.Parse(typeof(DDConditionType), typeStr);
+                } catch {
+                    StackRecover();
+                    return null;
+                }
+                tok = NextToken();
+                if (tok.type == TokenType.LParen) {
+                    tok = NextToken();
+                    if (tok.type == TokenType.String) {
+                        content = tok.value;
+                        if (NextToken().type == TokenType.RParen && NextToken().type == TokenType.RAngleBracket) {
+                            // <String(String)>
+                            DDialogCondition cond = new DDialogCondition(type, content);
+                            return cond;
+                        } else {
+                            StackRecover();
+                            return null;
+                        }
+                    } else {
+                        StackRecover();
+                        return null;
+                    }
+                } else {
+                    tok = NextToken();
+                    if (tok.type == TokenType.RAngleBracket) {
+                        // <String>
+                        DDialogCondition cond = new DDialogCondition(type);
+                        return cond;
+                    } else {
+                        StackRecover();
+                        return null;
+                    }
+                }
+            } else {
+                StackRecover();
+                return null;
+            }
+        } else {
+            StackRecover();
+            return null;
+        }
+    }
+    private DDialogNodeProperty ParseProperty() {
+        string name = "";
+        string value = "";
+        Token tok = NextToken();
+        if (tok.type == TokenType.LSquareBracket) {
+            tok = NextToken();
+            if (tok.type == TokenType.String) {
+                name = tok.value;
+                tok = NextToken();
+                if (tok.type == TokenType.RSquareBracket) {
+                    var prop = new DDialogNodeProperty(name, value);
+                    return prop;
+                } else if (tok.type == TokenType.LParen) {
+                    tok = NextToken();
+                    if (tok.type == TokenType.String) {
+                        value = tok.value;
+                        if (NextToken().type == TokenType.RParen && NextToken().type == TokenType.RSquareBracket) {
+                            return new DDialogNodeProperty(name, value);
+                        } else {
+                            StackRecover();
+                            return null;
+                        }
+                    } else {
+                        StackRecover();
+                        return null;
+                    }
+                } else {
+                    StackRecover();
+                    return null;
+                }
+            } else {
+                StackRecover();
+                return null;
+            }
+        } else {
+            StackRecover();
+            return null;
+        }
+    }
 
 }
 }

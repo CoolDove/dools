@@ -6,12 +6,15 @@ namespace dove
 {
 public enum DefaultDDialogType
 { 
+    None,
+    Sequence,
     Dialog,
-    Action, 
+    Action,
     Item
 }
 
 public enum DDConditionType { 
+    None,
     Sig,
     NSig,
     Ask,
@@ -68,12 +71,20 @@ public class DDialogCondition
 { 
     public DDConditionType type;
     public string content;
+    public DDialogCondition(DDConditionType type, string content = "") {
+        this.type = type;
+        this.content = content;
+    }
 }
 
 public class DDialogNodeProperty
 {
     public string name;
     public string value;
+    public DDialogNodeProperty(string name, string value) {
+        this.name = name;
+        this.value = value;
+    }
 }
 
 public class DDialogContext
