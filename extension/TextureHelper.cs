@@ -17,6 +17,5 @@ public static class TextureHelper
         RenderTexture.active = stash;
         return tex;
     }
-    
 }
 }
