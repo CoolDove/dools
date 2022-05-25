@@ -3,45 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace dove
-{
-public enum DefaultDDialogType
 { 
-    Dialog,
-    Ask,
-    Answer,
-    Sig,
-    NSig,
-    Action, 
-    Item
-}
-
-public class DDialogue<NodeType> where NodeType : System.Enum
-{
-    private DDialogNode<NodeType> nodes;
-    private DDialogProcessor<NodeType> processor;
-
-    public DDialogNode<NodeType> currentNode;
-
-    private List<DDialogContext> contexts = new List<DDialogContext>();
-
-    public DDialogue(string source,DDialogProcessor<NodeType> processor) {
-        currentNode = Parse(source);
-        this.processor = processor;
-    }
-
-    // return root
-    private DDialogNode<NodeType> Parse(string source) {
-        DDialogueParser<NodeType> parser = new DDialogueParser<NodeType>(source);
-        return parser.Parse();
-    }
-
-    public void Next() {
-        currentNode = processor?.Process(currentNode);
-    }
-}
-
-
-internal class DDialogueParser<NodeType> where NodeType : System.Enum
+class DDialogueParser<NodeType> where NodeType : System.Enum
 {
     private enum TokenType
     { 
@@ -57,14 +20,14 @@ internal class DDialogueParser<NodeType> where NodeType : System.Enum
         RBrace,
         String
     }
-    private struct Token { 
+    private class Token { 
         public TokenType type;
         public string value;
-            public Token(TokenType type)
-            {
-                this.type = type;
-                this.value = "";
-            }
+        public Token(TokenType type)
+        {
+            this.type = type;
+            this.value = "";
+        }
         public Token(TokenType type, string value) {
             this.type = type;
             this.value = value;
@@ -82,12 +45,15 @@ internal class DDialogueParser<NodeType> where NodeType : System.Enum
         return source[pos + 1];
     } }
 
+    private Stack<Token> tokenStackRecover = new Stack<Token>();
+    private Stack<Token> tokenStackUsing = new Stack<Token>();
 
     public DDialogueParser(string source) {
         this.source = source;
     }
 
-    private Token PeekToken() { 
+    private Token PeekToken() {
+        if (tokenStackRecover.Count != 0) return tokenStackRecover.Peek();
         int posStash = pos;
         Token token = NextToken();
         pos = posStash;
@@ -95,7 +61,16 @@ internal class DDialogueParser<NodeType> where NodeType : System.Enum
     }
 
     private Token NextToken() {
+        Token tok = getNextToken();
+        tokenStackUsing.Push(tok);
+        return tok;
+    }
+    private Token getNextToken() {
+        if (tokenStackRecover.Count != 0) return tokenStackRecover.Pop();
+
         while (current == ' ' || current == '\n' || current == '\r' || current == '\t') { pos++; }
+
+        Token tok;
 
         if (current == '\0') {
             return new Token(TokenType.End);
@@ -145,7 +120,7 @@ internal class DDialogueParser<NodeType> where NodeType : System.Enum
         while(true) {
             if (isValid(current))
             {
-                if (current == '\n' || current == '\r' || current == '\t') {
+                if (current == ' ' || current == '\n' || current == '\r' || current == '\t') {
                     pos++;
                     continue;
                 }
@@ -159,42 +134,23 @@ internal class DDialogueParser<NodeType> where NodeType : System.Enum
     }
 
     public DDialogNode<NodeType> Parse() {
-        Token token;
-        while (true) {
-            token = NextToken();
-            Debug.Log($"token: {System.Enum.GetName(typeof(TokenType), token.type)}");
-            if (token.type == TokenType.End) break;
+        // var root = ParseNode();
+        // DDialogNode<NodeType> root = new DDialogNode<NodeType>();
+        // return root;
+        Token tok = new Token(TokenType.None);
+        while (tok.type != TokenType.End) {
+            tok = NextToken();
         }
-        NodeType type = (NodeType)System.Enum.Parse(typeof(NodeType), "ErrorEnum");
-        return new DDialogNode<NodeType>(type, "");
+        return null;
     }
 
+    // recover token stack if failed
+    // private DDialogNode<NodeType> ParseNode() {
+    // }
+    // private DDialogCondition ParseCondition() {
+    // }
+    // private DDialogNodeProperty ParseProperty() {
+    // }
+
 }
-
-
-public abstract class DDialogProcessor<NodeType> where NodeType : System.Enum
-{
-    // return next node
-    public abstract DDialogNode<NodeType> Process(DDialogNode<NodeType> node);
-}
-
-public class DDialogNode<NodeType> where NodeType : System.Enum
-{
-    public NodeType type { get; private set; }
-
-    public DDialogNode<NodeType> parent;
-    public List<DDialogNode<NodeType>> childs { get; private set; }
-
-    public DDialogNode(NodeType type, string content) {
-        this.type = type;
-        this.content = content;
-    }
-
-    private string content;
-}
-
-public class DDialogContext
-{
-}
-
 }
